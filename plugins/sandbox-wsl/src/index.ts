@@ -11,6 +11,8 @@
  *                 distro is read-only and every other Windows drive is hidden
  *   network     → `network: "none"` leaves the command in an empty network namespace
  *   mask-paths  → a tmpfs over a directory, /dev/null over a file
+ *   readonly-roots → a read-only bind over each root, shadowing whatever writable mount
+ *                 would otherwise cover it (a state root inside the Workspace included)
  *
  * WHAT MAKES IT A SANDBOX. WSL's interop lets a Linux process start a Windows program, and that
  * program is an ordinary host process: inside bwrap with the network cut, `cmd.exe` still wrote
@@ -119,7 +121,7 @@ export function createWslProvider(
   const node = internals.node ?? process.execPath;
   const launcher = internals.launcher ?? launcherPath();
   return {
-    dimensions: ["fs-write", "network", "mask-paths", "closed-temp"],
+    dimensions: ["fs-write", "network", "mask-paths", "closed-temp", "readonly-roots"],
     confine(argv, policy: SandboxPolicy): ConfinedArgv {
       const state = readState();
       if (state === null) {
@@ -406,7 +408,7 @@ export class SandboxWslStatus {
       {
         id: "sandbox-wsl.provider",
         name: "penguin-wsl",
-        dimensions: ["fs-write", "network", "mask-paths", "closed-temp"],
+        dimensions: ["fs-write", "network", "mask-paths", "closed-temp", "readonly-roots"],
       },
     ],
     "PluginConfigProvider.groups": [
